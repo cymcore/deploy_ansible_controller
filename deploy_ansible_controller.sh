@@ -49,8 +49,8 @@ InvokeInitialChecks() {
         exit 1
     fi
 
-    if ! $(curl -k -s -o /dev/null https://intranet.cymcore.com); then
-        echo "Cannot reach intranet.cymcore.com"
+    if ! $(curl -k -s -o /dev/null https://github.com); then
+        echo "Not connected to the internet"
         exit 1
     fi
 
