@@ -59,7 +59,7 @@ InvokeInitialChecks() {
 InstallSystemDependencies() {
     echo "Action: install system dependencies"
 
-    apt update
+    apt update || true
 
     for systemApt in "${systemApts[@]}"; do
         apt install -y "$systemApt"
@@ -69,7 +69,7 @@ InstallSystemDependencies() {
 InstallAnsible() {
     echo "Action: installing ansible"
 
-    apt update
+    apt update || true
 
     for ansibleApt in "${ansibleApts[@]}"; do
         apt install -y "$ansibleApt"
