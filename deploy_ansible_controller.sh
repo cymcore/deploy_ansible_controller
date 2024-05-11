@@ -75,8 +75,6 @@ InstallAnsible() {
         apt install -y "$ansibleApt"
     done
 
-    pip3 install virtualenv
-
     rm -Rf "$ansibleStructureDirectory"/"$ansibleStructureTopDir"/
     
     if [ -z "$ansibleGitRepo" ]; then

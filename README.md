@@ -5,7 +5,7 @@ It will handle two scenarios, a completely new ansible controller or downloading
 
 Configuration
 --------------
-1) tested with ubuntu 22.04
+1) tested with ubuntu 22.04 and debian 12
 2) default config variables are in config.ini, but if a config.ini.local is present it will use that (e.g. customizations)
 3) generally only used one time to start a new ansible git repo
 
