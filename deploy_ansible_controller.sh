@@ -4,9 +4,10 @@ set -e
 
 ShowHelp() {
     if [ "$1" == "--help" ]; then
-        echo "This script will install ansible, modules, and either download a git repo or build directory structure and local inventory"
-        echo -e "It will remove the previous installation."
+        echo "This script will install ansible, modules, and either init a git repo or build directory structure and local inventory"
         echo "Options can be configured by copy config.ini into a config.ini.local file and modifying the values"
+        echo "Needs to run as root"
+        echo "Needs to be connected to internet"
         exit 0
     fi
 }
@@ -16,9 +17,8 @@ ShowInitialMessage() {
 
     noTextColor='\033[0m'
 
-    echo "This script will install ansible, modules, and either download a git repo or build directory structure and local inventory"
-    echo -e "${redTextColor}It will remove the previous installation${noTextColor}"
-    echo "Run script with --help for more information"
+    echo "This script will install ansible, modules, and either init git repo or build directory structure and local inventory"
+    echo -e "${redTextColor}Make sure config.ini o config.ini.local has the correct options${noTextColor}"
     echo "Waiting thirty seconds for user to Cntl-C to cancel or Enter to continue"
 
     timerDurationSeconds=30
@@ -40,7 +40,7 @@ InvokeInitialChecks() {
     echo "Action: performing initial checks"
 
     if [ ! "$(id -u)" -eq 0 ]; then
-        echo "Script must be run as root directly or with sudo"
+        echo "Script must be run as root"
         exit 1
     fi
 
@@ -74,17 +74,16 @@ InstallAnsible() {
     for ansibleApt in "${ansibleApts[@]}"; do
         apt install -y "$ansibleApt"
     done
-
-    rm -Rf "$ansibleStructureDirectory"/"$ansibleStructureTopDir"/
     
-    if [ -z "$ansibleGitRepo" ]; then
+    if [ "$createGitRepo" == true ]; then
         git init "$ansibleStructureDirectory"/"$ansibleStructureTopDir"/
     else
-        git clone "$ansibleGitRepo" "$ansibleStructureDirectory"/"$ansibleStructureTopDir"/
+        mkdir -p "$ansibleStructureDirectory"/"$ansibleStructureTopDir"/
     fi
 
     cd "$ansibleStructureDirectory"/"$ansibleStructureTopDir"/
     
+    rm -Rf ./.venv
     virtualenv ./.venv
 
     source ./.venv/bin/activate
@@ -99,11 +98,15 @@ CreateAnsibleDirectoryStructure() {
         touch ./"$directory"/.gitkeep
     done
 
-    touch ./.gitignore
+    if [ ! -f ./.gitignore ]; then
+        touch ./.gitignore 
+            for gitIgnoreFile in "${gitIgnoreFiles[@]}"; do
+                 echo "$gitIgnoreFile" >> ./.gitignore
+             done
+    fi
+    
 
-    for gitIgnoreFile in "${gitIgnoreFiles[@]}"; do
-        echo "$gitIgnoreFile" >> ./.gitignore
-    done
+
 }
 
 InvokeRequirementsDoc() {
@@ -111,7 +114,7 @@ InvokeRequirementsDoc() {
 
     source ./.venv/bin/activate
 
-    if [ -z "$ansibleGitRepo" ]; then
+    if [ ! -f ./requirements.yml ]; then
         echo "collections:" > ./requirements.yml    
         for ansibleCollection in "${ansibleCollections[@]}"; do
             echo "  - name: $ansibleCollection" >> ./requirements.yml
@@ -143,6 +146,8 @@ EOF
 
 CreateAnsibleCfg() {
     cd "$ansibleStructureDirectory"/"$ansibleStructureTopDir"/
+
+    if [ ! -f ./ansible.cfg ]; then
     cat << "EOF" > ./ansible.cfg
 [defaults]
 gathering = smart
@@ -167,10 +172,13 @@ cache_connection = cache_inventory
 enable_plugins = constructed, yaml, ini, auto
 any_unparsed_is_failed = true
 EOF
+    fi
 }
 
 CreateApb() {
     cd "$ansibleStructureDirectory"/"$ansibleStructureTopDir"/
+    
+    if [ !  -f ./apb.sh ]; then
     cat << "EOF" >  apb.sh
 #!/bin/bash
 
@@ -187,6 +195,7 @@ source ./.venv/bin/activate
 ansible-playbook $1 --skip-tags "out" --ask-become-pass --ask-vault-pass
 
 EOF
+    fi
     chmod +x ./apb.sh
 }
 
@@ -242,16 +251,18 @@ InstallSystemDependencies
 
 InstallAnsible
 
-# If a git repo is not specified in the config.ini or config.ini.local, then create the directory structure and initialize
-if [ -z "$ansibleGitRepo" ]; then
-    CreateAnsibleDirectoryStructure
-    CreateAnsibleCfg
-    CreateAnsibleLocalInventory
-    CreateApb
-fi
+CreateAnsibleDirectoryStructure
+
+CreateAnsibleCfg
+
+CreateAnsibleLocalInventory
+
+CreateApb
 
 InstallAnsibleCommon
 
 InvokeRequirementsDoc
 
 InvokeFinishTasks
+
+# TODO - run the ansibe playbook to finish installing the control node if present
