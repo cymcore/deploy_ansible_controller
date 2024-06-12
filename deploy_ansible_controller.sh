@@ -226,7 +226,7 @@ InvokeFinishTasks() {
 
     deactivate
 
-    chown -R "$ansibleUser":"$ansibleUser" "$ansibleStructureDirectory"/"$ansibleStructureTopDir"/
+    chown -R "$ansibleUserDirectoryOwner":"$ansibleUserDirectoryOwner" "$ansibleStructureDirectory"/"$ansibleStructureTopDir"/
 
     echo "Script completed successfully"
 }
