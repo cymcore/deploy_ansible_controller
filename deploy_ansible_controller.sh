@@ -137,10 +137,10 @@ CreateAnsibleLocalInventory() {
     cd "$ansibleStructureDirectory"/"$ansibleStructureTopDir"/
     cat << EOF > ./inventory/local.yml
 all:
-hosts:
+  hosts:
     localhost:
-    ansible_connection: local
-    ansible_python_interpreter: $ansibleStructureDirectory/$ansibleStructureTopDir/.venv/bin/python3
+      ansible_connection: local
+      ansible_python_interpreter: $ansibleStructureDirectory/$ansibleStructureTopDir/.venv/bin/python3
 EOF
 }
 
