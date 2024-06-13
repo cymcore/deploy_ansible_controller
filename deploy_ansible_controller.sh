@@ -135,7 +135,7 @@ InvokeRequirementsDoc() {
 
 CreateAnsibleLocalInventory() {
     cd "$ansibleStructureDirectory"/"$ansibleStructureTopDir"/
-    cat << EOF > ./inventory/local.yml
+    cat << EOF > ./inventory/localhost.yml
 all:
   hosts:
     localhost:
