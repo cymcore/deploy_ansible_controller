@@ -107,9 +107,9 @@ InvokeAnsibleControlNodeAptsDoc() {
 
     source ./.venv/bin/activate
 
-    if [! -f ansible_control_node_apts] then
+    if [ ! -f ansible_control_node_apts ]; then
         touch ansible_control_node_apts
-        for ansibleApt in "${ansibleControlNodeApts[@]}"; do
+        for ansibleApt in "${ansibleApts[@]}"; do
             echo "$ansibleApt" >> ./ansible_control_node_apts
         done
     fi
@@ -128,7 +128,7 @@ InvokeAnsibleControlNodeCollectionsDoc() {
 
     source ./.venv/bin/activate
 
-    if [! -f ansible_control_node_collections] then
+    if [ ! -f ansible_control_node_collections ]; then
         touch ansible_control_node_collections
         echo "collections:" > ./ansible_control_node_collections
         for ansibleCollection in "${ansibleCollections[@]}"; do
@@ -146,7 +146,7 @@ InvokeAnsibleControlNodePipDoc() {
 
     source ./.venv/bin/activate
 
-    if [! -f ansible_control_node_pip] then
+    if [ ! -f ansible_control_node_pip ]; then
         touch ./ansible_control_node_pip
         for ansibleCollectionsPythonModule in "${ansibleCollectionsPythonModules[@]}"; do
         echo "$ansibleCollectionsPythonModule" >> ./ansible_control_node_pip
