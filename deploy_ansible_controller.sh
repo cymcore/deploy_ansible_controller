@@ -156,6 +156,21 @@ InvokeAnsibleControlNodePipDoc() {
     pip3 install -r ansible_control_node_pip
 }
 
+InvokeAnsibleControlNodeCustomScriptDoc() {
+    echo "Action: running custom script"
+
+    cd "$ansibleStructureDirectory"/"$ansibleStructureTopDir"/
+
+    source ./.venv/bin/activate
+
+    if [ ! -f ansible_control_node_custom ]; then
+        touch ansible_control_node_custom
+        echo '#!/bin/bash' > ./ansible_control_node_custom
+    fi
+    chmod +x ./ansible_control_node_custom
+    bash -c ./ansible_control_node_custom
+}
+
 CreateAnsibleLocalInventory() {
     echo "Action: creating ansible local inventory"
 
@@ -298,6 +313,7 @@ InstallAnsibleCommon
 InvokeAnsibleControlNodeAptsDoc
 InvokeAnsibleControlNodePipDoc
 InvokeAnsibleControlNodeCollectionsDoc
+InvokeAnsibleControlNodeCustomScriptDoc
 
 InvokeFinishTasks
 
