@@ -68,12 +68,6 @@ InstallSystemDependencies() {
 
 InstallAnsible() {
     echo "Action: installing ansible"
-
-    apt update || true
-
-    for ansibleApt in "${ansibleApts[@]}"; do
-        apt install -y "$ansibleApt"
-    done
     
     if [ "$createGitRepo" == true ]; then
         git init "$ansibleStructureDirectory"/"$ansibleStructureTopDir"/
@@ -92,6 +86,7 @@ InstallAnsible() {
 }
 
 CreateAnsibleDirectoryStructure() {
+    echo "Action: creating ansible directory structure"
     cd "$ansibleStructureDirectory"/"$ansibleStructureTopDir"/
     for directory in "${ansibleDirectories[@]}"; do
         mkdir -p ./"$directory"
@@ -104,37 +99,68 @@ CreateAnsibleDirectoryStructure() {
                  echo "$gitIgnoreFile" >> ./.gitignore
              done
     fi
-    
-
-
 }
+InvokeAnsibleControlNodeAptsDoc() {
+    echo "Action: install ansible system apts"
 
-InvokeRequirementsDoc() {
     cd "$ansibleStructureDirectory"/"$ansibleStructureTopDir"/
 
     source ./.venv/bin/activate
 
-    if [ ! -f ./requirements.yml ]; then
-        echo "collections:" > ./requirements.yml    
-        for ansibleCollection in "${ansibleCollections[@]}"; do
-            echo "  - name: $ansibleCollection" >> ./requirements.yml
+    if [! -f ansible_control_node_apts] then
+        touch ansible_control_node_apts
+        for ansibleApt in "${ansibleControlNodeApts[@]}"; do
+            echo "$ansibleApt" >> ./ansible_control_node_apts
         done
     fi
 
-    for ansibleCollectionsPythonModule in "${ansibleCollectionsPythonModules[@]}"; do
-        pip3 install "$ansibleCollectionsPythonModule"
-    done
+    apt update || true
 
-    if [ ! -f ./requirements.yml ]; then
-        exit 1
-        echo "Check: requirements.yml file not found"
+    apt install -y $(cat ./ansible_control_node_apts)
+
+}
+
+
+InvokeAnsibleControlNodeCollectionsDoc() {
+    echo "Action: install ansible collections"
+
+    cd "$ansibleStructureDirectory"/"$ansibleStructureTopDir"/
+
+    source ./.venv/bin/activate
+
+    if [! -f ansible_control_node_collections] then
+        touch ansible_control_node_collections
+        echo "collections:" > ./ansible_control_node_collections
+        for ansibleCollection in "${ansibleCollections[@]}"; do
+            echo "  - name: $ansibleCollection" >> ./ansible_control_node_collections
+        done
     fi
 
-    ansible-galaxy collection install -r ./requirements.yml
+    ansible-galaxy collection install -r ./ansible_control_node_collections
+}
+
+InvokeAnsibleControlNodePipDoc() {
+    echo "Action: install ansible python modules"
+
+    cd "$ansibleStructureDirectory"/"$ansibleStructureTopDir"/
+
+    source ./.venv/bin/activate
+
+    if [! -f ansible_control_node_pip] then
+        touch ./ansible_control_node_pip
+        for ansibleCollectionsPythonModule in "${ansibleCollectionsPythonModules[@]}"; do
+        echo "$ansibleCollectionsPythonModule" >> ./ansible_control_node_pip
+        done
+    fi
+
+    pip3 install -r ansible_control_node_pip
 }
 
 CreateAnsibleLocalInventory() {
+    echo "Action: creating ansible local inventory"
+
     cd "$ansibleStructureDirectory"/"$ansibleStructureTopDir"/
+
     cat << EOF > ./inventory/localhost.yml
 all:
   hosts:
@@ -145,6 +171,8 @@ EOF
 }
 
 CreateAnsibleCfg() {
+    echo "Action: creating ansible.cfg"
+
     cd "$ansibleStructureDirectory"/"$ansibleStructureTopDir"/
 
     if [ ! -f ./ansible.cfg ]; then
@@ -176,6 +204,8 @@ EOF
 }
 
 CreateApb() {
+    echo "Action: creating apb script"
+
     cd "$ansibleStructureDirectory"/"$ansibleStructureTopDir"/
     
     if [ !  -f ./apb.sh ]; then
@@ -220,6 +250,8 @@ InstallCymCert() {
 }
 
 InvokeFinishTasks() {
+    echo "Action: finishing tasks"
+    
     cd "$ansibleStructureDirectory"/"$ansibleStructureTopDir"/
 
     echo "Action: finishing tasks"
@@ -232,6 +264,7 @@ InvokeFinishTasks() {
 }
 
 InvokeSourceConfig() {
+    echo "Action: sourcing config.ini"
     if [ -f config.ini.local ]; then
         source config.ini.local
     else
@@ -239,6 +272,7 @@ InvokeSourceConfig() {
     fi
 }
 ### Main ###
+
 ShowHelp
 
 InvokeSourceConfig
@@ -261,8 +295,9 @@ CreateApb
 
 InstallAnsibleCommon
 
-InvokeRequirementsDoc
+InvokeAnsibleControlNodeAptsDoc
+InvokeAnsibleControlNodePipDoc
+InvokeAnsibleControlNodeCollectionsDoc
 
 InvokeFinishTasks
 
-# TODO - run the ansibe playbook to finish installing the control node if present
